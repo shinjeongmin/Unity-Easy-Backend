@@ -72,6 +72,32 @@ public class ItemManager : MonoBehaviour
             itemGo.transform.Find("Price").GetComponent<Text>().text = itemInfoJson["price"];
             itemGo.transform.Find("Description").GetComponent<Text>().text = itemInfoJson["description"];
             
+            // TODO:
+            // 1. Get image version and send it to Image Manager
+
+            int imgVer = itemInfoJson["imgVer"].AsInt;
+            
+            byte[] bytes = ImageManager.Instance.LoadImage(itemId, imgVer);
+
+            // Download from web
+            if (bytes.Length == 0)
+            {
+                //Create a callback to get the SPRITE from Web.cs
+                Action<byte[]> getItemIconCallback = (downloadedBytes) =>
+                {
+                    Sprite sprite = ImageManager.Instance.BytesToSprite(downloadedBytes);
+                    itemGo.transform.Find("Image").GetComponent<Image>().sprite = sprite;
+                    ImageManager.Instance.SaveImage(itemId, downloadedBytes, imgVer);
+                    ImageManager.Instance.SaveVersionJson();
+                };
+                StartCoroutine(Main.Instance.Web.GetItemIcon(itemId, getItemIconCallback));   
+            }
+            //Load from device
+            else {
+                Sprite sprite = ImageManager.Instance.BytesToSprite(bytes);
+                itemGo.transform.Find("Image").GetComponent<Image>().sprite = sprite;
+            }
+
             //Set Sell Button
             itemGo.transform.Find("SellButton").GetComponent<Button>().onClick.AddListener(() =>
             {
@@ -84,6 +110,7 @@ public class ItemManager : MonoBehaviour
             //continue to the next item
             //반복문으로 다른 ID의 아이템들을 호출
         }
+
 
         yield return null;
     }

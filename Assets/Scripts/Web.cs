@@ -184,4 +184,27 @@ public class Web : MonoBehaviour
             }
         }
     }
+    
+    public IEnumerator GetItemIcon(string itemID, System.Action<byte[]> callback) {
+        WWWForm form = new WWWForm();
+        form.AddField("itemID", itemID);
+        
+        using (UnityWebRequest webRequest = UnityWebRequest.Post("http://127.0.0.1/UnityBackendTutorial/GetItemIcon.php", form))
+        {
+            yield return webRequest.SendWebRequest();
+
+            //Check for errors
+            if (webRequest.isNetworkError)
+            {
+                Debug.Log("Error: " + webRequest.error);
+            }
+            else
+            {
+                Debug.Log("DOWNLOADING ICON: " + itemID);
+                //results as byte array
+                byte[] bytes = webRequest.downloadHandler.data;
+                callback(bytes);
+            }
+        }
+    }
 }
